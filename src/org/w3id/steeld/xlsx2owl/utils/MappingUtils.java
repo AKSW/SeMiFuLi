@@ -1,15 +1,27 @@
 package org.w3id.steeld.xlsx2owl.utils;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.InputMismatchException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
+
 public class MappingUtils {
 	
+	/**
+	 * RegExp Pattern for IRIs with a prefix like e.g. 'foaf:person' 
+	 */
 	protected static Pattern iriPrefixPattern = Pattern.compile("^(?>(?<pre>.+?)(?<sep>:|%3A|%3a))?(?<sub>.*+)");
 	/**
 	 * Returns the given Iri with expanded prefix from prefixMap
@@ -41,9 +53,40 @@ public class MappingUtils {
 		} else return iri;
 	}
 	
-	public static String expandIriPrefix(String iri, String filePath) {
-		//CSVFormat.
-		return expandIriPrefix(iri, Collections.emptyMap()); //FIXME
+	/**
+	 * reads in a mapping of prefixes to iris from csv input.
+	 * CSV input should be comma(',') separated and have the header 'prefix,iri'.
+	 * @param in Reader to read the csv input from
+	 * @return returns the iri mapping
+	 * @throws IOException
+	 */
+	public static Map<String, String> readInPrefixCsv(Reader in) throws IOException {
+		Map<String, String> prefixMap = new HashMap<>();
+		
+		CSVFormat csvReader = CSVFormat.Builder.create(CSVFormat.EXCEL).setHeader().build();
+		Iterable<CSVRecord> records = csvReader.parse(in);
+		for (CSVRecord record : records) {
+			if (!record.isMapped("prefix") || !record.isMapped("iri")) {
+				String headerList = String.join(",", new LinkedList<String>(record.toMap().keySet()));
+				throw new IOException("unexpected CSV header. Expected 'prefix,iri' but got '"+headerList+"'");
+			}
+		    String prefix = record.get("prefix");
+		    String longIri = record.get("iri");
+		    prefixMap.put(prefix, longIri);
+		}
+		
+		return prefixMap;
+	}
+	
+	public static String expandIriPrefix(String iri) throws IOException {
+		return expandIriPrefix(iri, "resources/prefixes.csv");
+	}
+
+	public static String expandIriPrefix(String iri, String prefixFilePath) throws IOException {
+		Map<String, String> prefixMap = readInPrefixCsv(new FileReader(prefixFilePath));	
+		String expandedIri = expandIriPrefix(iri, prefixMap);
+		System.out.println("expanded Iri '"+iri+"' to '"+expandedIri+"'");
+		return expandedIri;
 	}
 	
 

@@ -1,8 +1,13 @@
 package org.w3id.steeld.xlsx2owl.utils.test;
 
+import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,6 +76,20 @@ class MappingUtilsTest {
 		assertArrayEquals(new String[]{"abc"},
 				MappingUtils.split("abc", "").toArray(),
 				"split 'abc' on empty string '' should return input");
+	}
+	
+	@Test
+	void testReadInPrefixCsv() throws IOException {
+		assertEquals("{owl=http://www.w3.org/2002/07/owl#, dc=http://purl.org/dc/elements/1.1/}",
+				MappingUtils.readInPrefixCsv(new StringReader(
+						"prefix,iri\r\n"
+								+ "dc,http://purl.org/dc/elements/1.1/\r\n"
+								+ "owl,http://www.w3.org/2002/07/owl#\r\n"
+						)).toString(),
+				"testing csv read in");
+		assertEquals("{owl=http://www.w3.org/2002/07/owl#, dc=http://purl.org/dc/elements/1.1/}",
+				MappingUtils.readInPrefixCsv(new FileReader("resources/prefixes.csv")).toString(),
+				"testing csv read in from File");
 	}
 
 }
