@@ -1,5 +1,6 @@
 package org.w3id.steel.xlsx2owl.utils;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -64,18 +65,40 @@ public class MappingUtils {
 	 * @throws IOException
 	 */
 	public static Map<String, String> readInPrefixCsv(Reader in) throws IOException {
-		Map<String, String> prefixMap = new HashMap<>();
+		//we avoid csv libraries for compatibility and implement direct csv parsing here
 		
-		CSVFormat csvReader = CSVFormat.Builder.create(CSVFormat.EXCEL).setHeader().build();
-		Iterable<CSVRecord> records = csvReader.parse(in);
-		for (CSVRecord record : records) {
-			if (!record.isMapped("prefix") || !record.isMapped("iri")) {
-				String headerList = String.join(",", new LinkedList<String>(record.toMap().keySet()));
-				throw new IOException("unexpected CSV header. Expected 'prefix,iri' but got '"+headerList+"'");
-			}
-		    String prefix = record.get("prefix");
-		    String longIri = record.get("iri");
-		    prefixMap.put(prefix, longIri);
+		final String csvSplitRegex = "[,;\t]";
+		
+		Map<String, String> prefixMap = new HashMap<>();
+		Integer prefixColumn = null;
+		Integer iriColumn = null;
+		
+		BufferedReader bufferedReader = new BufferedReader(in);
+		
+		//* read in csv header
+		String headerLine = bufferedReader.readLine();
+		
+		String[] headerArray = headerLine.split(csvSplitRegex);
+		for (int i = headerArray.length -1; i>=0; i--) {
+			//System.out.println("'"+headerArray[i]+"'");
+			if ("prefix".compareToIgnoreCase(headerArray[i]) == 0) 
+				prefixColumn = i;
+			if ("iri".compareToIgnoreCase(headerArray[i]) == 0)
+				iriColumn = i;
+		}
+		if (prefixColumn==null || iriColumn==null)
+			throw new IOException("unexpected CSV header. Expected something like 'prefix,iri' but got '"+headerLine+"'");
+		
+		//* read in csv entries
+		String line;
+		while ( (line = bufferedReader.readLine()) != null) {
+			String[] entryArray = line.split(csvSplitRegex);
+			if (entryArray.length != headerArray.length)
+				throw new IOException("unexpected CSV line column count. Expected "+headerArray.length+" columns, bot found "+entryArray.length+" columns in line '"+line+"'");
+			
+			String prefix = entryArray[prefixColumn];
+			String longIri = entryArray[iriColumn];
+			prefixMap.put(prefix, longIri);
 		}
 		
 		return prefixMap;
