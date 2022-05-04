@@ -1,4 +1,4 @@
-package org.w3id.steeld.xlsx2owl.utils.test;
+package org.w3id.steel.xlsx2owl.utils.test;
 
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
-import org.w3id.steeld.xlsx2owl.utils.MappingUtils;
+import org.w3id.steel.xlsx2owl.utils.MappingUtils;
 
 class MappingUtilsTest {
 	

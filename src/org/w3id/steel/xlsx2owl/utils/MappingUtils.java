@@ -1,4 +1,4 @@
-package org.w3id.steeld.xlsx2owl.utils;
+package org.w3id.steel.xlsx2owl.utils;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -16,8 +16,11 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MappingUtils {
+	private static final Logger logger = LoggerFactory.getLogger(MappingUtils.class);
 	
 	/**
 	 * RegExp Pattern for IRIs with a prefix like e.g. 'foaf:person' 
@@ -77,6 +80,43 @@ public class MappingUtils {
 		
 		return prefixMap;
 	}
+
+//	public static String[] readCsvLineTuple(Reader in) {
+//		while( (strLine = br.readLine()) != null)
+//	    {
+//	        lineNumber++;
+//
+//	        //break comma separated line using ","
+//	        st = new StringTokenizer(strLine, ",");
+//
+//	        while(st.hasMoreTokens())
+//	        {
+//	        //display csv values
+//	        tokenNumber++;
+//	        System.out.println("Line # " + lineNumber +
+//	                        ", Token # " + tokenNumber
+//	                        + ", Token : "+ st.nextToken());
+//
+//
+//	                    System.out.println(cols[4]);
+//	}
+	
+	public static List<String> expandIriPrefixes(List<String> iris) throws IOException {
+		if (iris == null)
+			return null;
+		if (iris.size()<=0)
+			return Collections.emptyList();
+		List<String> result = new LinkedList<>();
+		Map<String, String> prefixMap = readInPrefixCsv(new FileReader("resources/prefixes.csv"));
+		for (String iri:iris) {
+			String expandedIri = expandIriPrefix(iri, prefixMap);
+			if (expandedIri!=null && expandedIri.trim().length()!=0)
+				result.add(expandedIri);
+		}
+		if (iris.size() > 0)
+			logger.debug("expanded Iris '"+iris+"' to '"+result+"'");
+		return result;
+	}
 	
 	public static String expandIriPrefix(String iri) throws IOException {
 		return expandIriPrefix(iri, "resources/prefixes.csv");
@@ -85,7 +125,8 @@ public class MappingUtils {
 	public static String expandIriPrefix(String iri, String prefixFilePath) throws IOException {
 		Map<String, String> prefixMap = readInPrefixCsv(new FileReader(prefixFilePath));	
 		String expandedIri = expandIriPrefix(iri, prefixMap);
-		System.out.println("expanded Iri '"+iri+"' to '"+expandedIri+"'");
+		if (iri!=null && iri.trim().length()!=0)
+			logger.debug("expanded Iri '"+iri+"' to '"+expandedIri+"'");
 		return expandedIri;
 	}
 	
@@ -112,7 +153,16 @@ public class MappingUtils {
 		else if (sep.length()!=1)
 			return Collections.singletonList(s);
 				//throw new InputMismatchException("expected a single character as split separator, but got '"+sep+"'");
-		else return Arrays.asList(s.split(sep));
+		else {
+			List<String> result = Arrays.asList(s.split(sep));
+			if (result.size()>1)
+				logger.debug("split '"+s+"' to "+result);
+			return result;
+		}
     }
+	
+	public static List<String> splitAndExpandIris(String s, String sep) throws IOException {
+		return expandIriPrefixes( split(s, sep) );
+	}
 
 }
