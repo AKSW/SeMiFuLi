@@ -80,16 +80,23 @@ class MappingUtilsTest {
 	
 	@Test
 	void testReadInPrefixCsv() throws IOException {
-		assertEquals("{owl=http://www.w3.org/2002/07/owl#, dc=http://purl.org/dc/elements/1.1/}",
+		assertEquals("{dc=http://purl.org/dc/elements/1.1/, owl=http://www.w3.org/2002/07/owl#}",
 				MappingUtils.readInPrefixCsv(new StringReader(
 						"prefix,iri\r\n"
 								+ "dc,http://purl.org/dc/elements/1.1/\r\n"
 								+ "owl,http://www.w3.org/2002/07/owl#\r\n"
 						)).toString(),
 				"testing csv read in");
-		assertEquals("{owl=http://www.w3.org/2002/07/owl#, dc=http://purl.org/dc/elements/1.1/}",
+		assertEquals("{dc=http://purl.org/dc/elements/1.1/, owl=http://www.w3.org/2002/07/owl#}",
 				MappingUtils.readInPrefixCsv(new FileReader("resources/prefixes.csv")).toString(),
 				"testing csv read in from File");
+		assertEquals("{dc=http://purl.org/dc/elements/1.1/"
+				+ ", owl=http://www.w3.org/2002/07/owl#"
+				+ ", rdfs=http://www.w3.org/2000/01/rdf-schema#"
+				+ ", rdf=http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+				+ "}",
+				MappingUtils.readInPrefixCsv(new FileReader("tests/resources/prefixes.csv")).toString(),
+				"testing csv read in from File with multiple separators");
 	}
 
 }

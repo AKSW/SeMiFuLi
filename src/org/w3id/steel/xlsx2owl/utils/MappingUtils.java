@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.InputMismatchException;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ public class MappingUtils {
 	 * RegExp Pattern for IRIs with a prefix like e.g. 'foaf:person' 
 	 */
 	protected static Pattern iriPrefixPattern = Pattern.compile("^(?>(?<pre>.+?)(?<sep>:|%3A|%3a))?(?<sub>.*+)");
+	
 	/**
 	 * Returns the given Iri with expanded prefix from prefixMap
 	 * @param iri
@@ -59,9 +61,10 @@ public class MappingUtils {
 	
 	/**
 	 * reads in a mapping of prefixes to iris from csv input.
-	 * CSV input should be comma(',') separated and have the header 'prefix,iri'.
+	 * CSV input should have a header line like 'prefix,iri' and be separated by comma(',') or semicolon(';') or tab.
+	 * No handling of quotes (' or ").
 	 * @param in Reader to read the csv input from
-	 * @return returns the iri mapping
+	 * @return returns the iri mapping ( prefix -> long iri ) 
 	 * @throws IOException
 	 */
 	public static Map<String, String> readInPrefixCsv(Reader in) throws IOException {
@@ -69,7 +72,7 @@ public class MappingUtils {
 		
 		final String csvSplitRegex = "[,;\t]";
 		
-		Map<String, String> prefixMap = new HashMap<>();
+		Map<String, String> prefixMap = new LinkedHashMap<>();
 		Integer prefixColumn = null;
 		Integer iriColumn = null;
 		
@@ -79,6 +82,7 @@ public class MappingUtils {
 		String headerLine = bufferedReader.readLine();
 		
 		String[] headerArray = headerLine.split(csvSplitRegex);
+		
 		for (int i = headerArray.length -1; i>=0; i--) {
 			//System.out.println("'"+headerArray[i]+"'");
 			if ("prefix".compareToIgnoreCase(headerArray[i]) == 0) 
@@ -92,38 +96,28 @@ public class MappingUtils {
 		//* read in csv entries
 		String line;
 		while ( (line = bufferedReader.readLine()) != null) {
-			String[] entryArray = line.split(csvSplitRegex);
-			if (entryArray.length != headerArray.length)
-				throw new IOException("unexpected CSV line column count. Expected "+headerArray.length+" columns, bot found "+entryArray.length+" columns in line '"+line+"'");
-			
-			String prefix = entryArray[prefixColumn];
-			String longIri = entryArray[iriColumn];
-			prefixMap.put(prefix, longIri);
+			if (line.trim().length()>0) { //only work on non empty lines
+				String[] entryArray = line.split(csvSplitRegex);
+				//System.out.println(Arrays.asList(entryArray).toString());
+				if (entryArray.length != headerArray.length)
+					throw new IOException("unexpected CSV line column count. Expected "+headerArray.length+" columns, bot found "+entryArray.length+" columns in line '"+line+"'");
+				
+				String prefix = entryArray[prefixColumn].trim();
+				String longIri = entryArray[iriColumn].trim();
+				prefixMap.put(prefix, longIri);
+			}
 		}
 		
 		return prefixMap;
 	}
-
-//	public static String[] readCsvLineTuple(Reader in) {
-//		while( (strLine = br.readLine()) != null)
-//	    {
-//	        lineNumber++;
-//
-//	        //break comma separated line using ","
-//	        st = new StringTokenizer(strLine, ",");
-//
-//	        while(st.hasMoreTokens())
-//	        {
-//	        //display csv values
-//	        tokenNumber++;
-//	        System.out.println("Line # " + lineNumber +
-//	                        ", Token # " + tokenNumber
-//	                        + ", Token : "+ st.nextToken());
-//
-//
-//	                    System.out.println(cols[4]);
-//	}
 	
+	/**
+	 * Returns the given list of iris, prefixes get expanded if known.
+	 * Known prefixes get read in from './resources/prefixes.csv'.
+	 * @param iris a list or iris
+	 * @return the list of iris with expanded prefixes
+	 * @throws IOException
+	 */
 	public static List<String> expandIriPrefixes(List<String> iris) throws IOException {
 		if (iris == null)
 			return null;
