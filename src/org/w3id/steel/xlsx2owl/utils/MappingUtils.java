@@ -1,10 +1,12 @@
 package org.w3id.steel.xlsx2owl.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,12 +24,59 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MappingUtils {
+	public static final String IRI_PREFIX_MAP_FILE_PROPERTY = "IRI_PREFIX_MAP_FILE";
+	public static final String IRI_PREFIX_MAP_FILE_ENV_VARIABLE = "IRI_PREFIX_MAP_FILE";
+
 	private static final Logger logger = LoggerFactory.getLogger(MappingUtils.class);
 	
 	/**
 	 * RegExp Pattern for IRIs with a prefix like e.g. 'foaf:person' 
 	 */
 	protected static Pattern iriPrefixPattern = Pattern.compile("^(?>(?<pre>.+?)(?<sep>:|%3A|%3a))?(?<sub>.*+)");
+	
+	public static String getPrefixMapFilePath() {
+		
+		// get current bin's / jar's path
+		// see https://stackoverflow.com/questions/2837263/how-do-i-get-the-directory-that-the-currently-executing-jar-file-is-in
+		String binPath;
+		try {
+			binPath = MappingUtils.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+		} catch (URISyntaxException e) {
+			logger.debug("unable to get bin path, taking working directory instead", e);
+			binPath = ".";
+		}
+ 
+		// fill path list for testing
+		LinkedList<String> testPaths = new LinkedList<String>(Arrays.asList("prefixes.csv", "resources/prefixes.csv", binPath+"/prefixes.csv", binPath+"/resources/prefixes.csv" ));
+		
+		// add value from System property as second entry
+		try {
+			String value = System.getProperty(IRI_PREFIX_MAP_FILE_PROPERTY);
+			if (null != value)
+				testPaths.addFirst( value );
+		} catch (SecurityException e) {
+			logger.info("got securityException while querying environment", e);
+		}
+		
+		// add value from System environment variable as first entry
+		try {
+			String value = System.getenv(IRI_PREFIX_MAP_FILE_ENV_VARIABLE);
+			if (null != value)
+				testPaths.addFirst( value );
+		} catch (SecurityException e) {
+			logger.info("got securityException while querying environment", e);
+		}
+		
+		// return first entry from test list where the file exists
+		for (String testPath: testPaths ) {
+			if ( new File(testPath).isFile() ) {
+				logger.debug("found iri prefix mapping file at '{}'", testPath);
+				return testPath;
+			}
+		}
+		// return last entry if no file exist
+		return testPaths.getLast();
+	}
 	
 	/**
 	 * Returns the given Iri with expanded prefix from prefixMap
@@ -124,7 +173,7 @@ public class MappingUtils {
 		if (iris.size()<=0)
 			return Collections.emptyList();
 		List<String> result = new LinkedList<>();
-		Map<String, String> prefixMap = readInPrefixCsv(new FileReader("resources/prefixes.csv"));
+		Map<String, String> prefixMap = readInPrefixCsv( new FileReader(getPrefixMapFilePath() ) );
 		for (String iri:iris) {
 			String expandedIri = expandIriPrefix(iri, prefixMap);
 			if (expandedIri!=null && expandedIri.trim().length()!=0)
@@ -136,7 +185,7 @@ public class MappingUtils {
 	}
 	
 	public static String expandIriPrefix(String iri) throws IOException {
-		return expandIriPrefix(iri, "resources/prefixes.csv");
+		return expandIriPrefix(iri, getPrefixMapFilePath());
 	}
 
 	public static String expandIriPrefix(String iri, String prefixFilePath) throws IOException {

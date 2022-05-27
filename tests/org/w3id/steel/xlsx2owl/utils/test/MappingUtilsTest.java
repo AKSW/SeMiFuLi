@@ -8,17 +8,27 @@ import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.LogManager;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.jupiter.api.Test;
 import org.w3id.steel.xlsx2owl.utils.MappingUtils;
+
+import be.ugent.idlab.knows.functions.agent.Agent;
+import be.ugent.idlab.knows.functions.agent.AgentFactory;
+import be.ugent.idlab.knows.functions.agent.Arguments;
+import be.ugent.idlab.knows.functions.agent.functionModelProvider.fno.exception.FnOException;
 
 class MappingUtilsTest {
 	
 	@Test
-	void testExpandIriPrefix() {
+	void testExpandIriPrefix() throws IOException {
 		@SuppressWarnings("serial")
 		Map<String, String> prefixMapWithoutBase = new HashMap<String, String>() {{
 				put("dc", "http://purl.org/dc/elements/1.1/");
@@ -40,6 +50,9 @@ class MappingUtilsTest {
 		
 		testExpandIriPrefixHelper("subject", "subject", Collections.emptyMap(), "with empty prefix map");
 		testExpandIriPrefixHelper("subject", "subject", null, "with missing (null) prefix map");
+		
+		//** test execution with mapping from file
+		assertEquals("http://purl.org/dc/elements/1.1/subject", MappingUtils.expandIriPrefix("dc:subject"));
 	}
 
 	void testExpandIriPrefixHelper(String input, String expected, Map<String, String> prefixMap) {
@@ -97,6 +110,40 @@ class MappingUtilsTest {
 				+ "}",
 				MappingUtils.readInPrefixCsv(new FileReader("tests/resources/prefixes.csv")).toString(),
 				"testing csv read in from File with multiple separators");
+	}
+	
+	@Test
+	void testFnoInvocation() throws Exception {
+		// see https://github.com/FnOio/function-agent-java#example
+
+		//// enable debug log for better errors
+		//org.apache.logging.log4j.LogManager.getRootLogger();
+		//Configurator.setAllLevels(org.apache.logging.log4j.LogManager.getRootLogger().getName(), Level.getLevel("Debug"));
+		
+		Agent agent = AgentFactory.createFromFnO("resources/functions_xlsx2owl.ttl");
+		// prepare the parameters for the function
+	    Arguments arguments = new Arguments()
+	        .add("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter", "dc:subject");
+	    // execute the function
+	    String result = (String)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#expandPrefix", arguments);
+	    assertEquals("http://purl.org/dc/elements/1.1/subject", result);
+	    
+	    arguments = new Arguments()
+	    		.add("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#p_array", "dc:subject");
+	    List<String>resultList = (List<String>)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#expandPrefixes", arguments);
+	    assertEquals(Arrays.asList("http://purl.org/dc/elements/1.1/subject"), resultList);
+	}
+	
+	@Test
+	void testGetPrefixMapFilePath() {
+		System.clearProperty(MappingUtils.IRI_PREFIX_MAP_FILE_PROPERTY);
+		assertEquals("resources/prefixes.csv", MappingUtils.getPrefixMapFilePath() );
+		
+		System.setProperty(MappingUtils.IRI_PREFIX_MAP_FILE_PROPERTY, "resources/functions_xlsx2owl.ttl");
+		assertEquals("resources/functions_xlsx2owl.ttl", MappingUtils.getPrefixMapFilePath() );
+		System.clearProperty(MappingUtils.IRI_PREFIX_MAP_FILE_PROPERTY);
+		
+		//difficult to test with changed working directory
 	}
 
 }
