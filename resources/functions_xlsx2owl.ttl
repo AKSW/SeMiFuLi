@@ -85,7 +85,9 @@ grelm:javaString
 
 sfunc:functionsImpl
     a                  fnoi:JavaClass ;
-    doap:download-page "xlsx2owl-utils.jar" ;
+    doap:download-page "resources/xlsx2owl-utils.jar" ;
+    doap:download-page "/opt/xlsx2owl-utils.jar" ;
+    doap:download-page "/home/user/data/resources/xlsx2owl-utils.jar" ;
     fnoi:class-name    "org.w3id.steel.xlsx2owl.utils.MappingUtils" ;
     .
 
@@ -108,6 +110,23 @@ sfunc:split
     fno:returns         ( grel:output_array ) ;
     .
 
+sfunc:splitAndTrim
+    a                   fno:Function ;
+    fno:name            "splitAndTrim" ;
+    dcterms:description "Returns the array of strings obtained by splitting `s` at wherever `sep` is found in it and removing heading and trailing spaces from the pieces" ;
+    fno:expects         ( grel:valueParam grel:param_string_sep ) ;
+    fno:returns         ( grel:output_array ) ;
+    .
+    
+sfunc:splitAndTrimMapping
+    a                    fno:Mapping ;
+    fno:function         sfunc:splitAndTrim ;
+    fno:implementation   sfunc:functionsImpl ;
+    fno:parameterMapping [ ] ;
+    fno:returnMapping    [ ] ;
+    fno:methodMapping    [ a                fnom:StringMethodMapping ;
+                           fnom:method-name "splitAndTrim" ] .
+
 # ExpandPrefix from InfAI
 
 sfunc:expandPrefix
@@ -123,6 +142,13 @@ sfunc:expandPrefixes
     fno:name            "expandPrefixes" ;
     dcterms:description "expand prefixes of the given Iri List if present" ;
     fno:expects         ( sfunc:param_array ) ;
+    fno:returns         ( grel:output_array ) ;
+    .
+sfunc:splitAndExpandPrefixes
+    a                   fno:Function ;
+    fno:name            "splitAndExpandPrefixes" ;
+    dcterms:description "Splits the given iris by separator 'sep' and expands prefixes (if known) in the resulting list of iris" ;
+    fno:expects         ( grel:valueParam grel:param_string_sep) ;
     fno:returns         ( grel:output_array ) ;
     .
 
@@ -146,4 +172,13 @@ sfunc:expandPrefixesMapping
     fno:returnMapping    [ ] ;
     fno:methodMapping    [ a                fnom:StringMethodMapping ;
                            fnom:method-name "expandIriPrefixes" ] .
+                           
+sfunc:splitAndExpandPrefixesMapping
+    a                    fno:Mapping ;
+    fno:function         sfunc:splitAndExpandPrefixes ;
+    fno:implementation   sfunc:functionsImpl ;
+    fno:parameterMapping [ ] ;
+    fno:returnMapping    [ ] ;
+    fno:methodMapping    [ a                fnom:StringMethodMapping ;
+                           fnom:method-name "splitAndExpandIriPrefixes" ] .
                            

@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +35,17 @@ public class MappingUtils {
 	 */
 	protected static Pattern iriPrefixPattern = Pattern.compile("^(?>(?<pre>.+?)(?<sep>:|%3A|%3a))?(?<sub>.*+)");
 	
+	/**
+	 * Tries to return a path to an existing prefix csv file. 
+	 * It checks for file existance in the following order:
+	 * * java property `IRI_PREFIX_MAP_FILE_PROPERTY`
+	 * * environment variable `IRI_PREFIX_MAP_FILE_ENV_VARIABLE`
+	 * * "prefixes.csv"
+	 * * "resources/prefixes.csv"
+	 * * binPath+"/prefixes.csv"
+	 * * binPath+"/resources/prefixes.csv"
+	 * @return
+	 */
 	public static String getPrefixMapFilePath() {
 		
 		// get current bin's / jar's path
@@ -165,7 +177,7 @@ public class MappingUtils {
 	 * Known prefixes get read in from './resources/prefixes.csv'.
 	 * @param iris a list or iris
 	 * @return the list of iris with expanded prefixes
-	 * @throws IOException
+	 * @throws IOException An IOException is thrown if problems arise reading the prefixes.csv file
 	 */
 	public static List<String> expandIriPrefixes(List<String> iris) throws IOException {
 		if (iris == null)
@@ -227,8 +239,40 @@ public class MappingUtils {
 		}
     }
 	
-	public static List<String> splitAndExpandIris(String s, String sep) throws IOException {
-		return expandIriPrefixes( split(s, sep) );
+	/**
+     * Returns the array of strings obtained by splitting `s` at wherever `sep` is found in it and removing heading and trailing spaces.
+     * `sep` can be either a string or a regular expression.
+     * For example, `split("fire, water, earth, air", ",")` returns the array of 4 strings:
+     * "fire", "water", "earth" , and "air".
+     * The double quotation marks are shown here only to highlight the fact that the spaces are removed.
+     *
+     * This implementation is a copy of the GREL string function "split" with additional null input handling and trim.
+     * @see https://github.com/FnOio/grel-functions-java/blob/master/src/main/java/io/fno/grel/StringFunctions.java
+     *
+     * @param s   string
+     * @param sep separator
+     * @return the array of strings obtained by splitting `s` at wherever `sep` is found in it
+     */
+	public static List<String> splitAndTrim(String s, String sep) {
+		List<String> result = new ArrayList<String>( split(s, sep) );
+		for (int z=0; z<result.size(); z++) {
+			if (result.get(z)!=null) {
+				result.set(z, result.get(z).trim() );
+			}
+		}
+		return result;
 	}
 
+	/**
+	 * Splits the given iris by separator 'sep' and expands prefixes (if known) in the resulting list of iris.
+	 * A CSV file 'prefixes.csv' with known prefixes is expected.
+	 * @param iris string containing possibly multiple iris, separated by 'sep'
+	 * @param sep
+	 * @return returns a list of iris with known prefixes expanded
+	 * @throws IOException An IOException is thrown if problems arise reading the prefixes.csv file
+	 */
+	public static List<String> splitAndExpandIriPrefixes(String iris, String sep) throws IOException {
+		return expandIriPrefixes( splitAndTrim(iris, sep));
+	}
+	
 }

@@ -54,6 +54,18 @@ class MappingUtilsTest {
 		//** test execution with mapping from file
 		assertEquals("http://purl.org/dc/elements/1.1/subject", MappingUtils.expandIriPrefix("dc:subject"));
 	}
+	
+	void testSplitAndExpandIriPrefixes() throws IOException {
+		assertEquals(
+				"http://purl.org/dc/elements/1.1/subject",
+				MappingUtils.splitAndExpandIriPrefixes("dc:subject", ";")
+				);
+		
+		assertArrayEquals(
+				new String[] {"http://purl.org/dc/elements/1.1/subject", "http://purl.org/dc/elements/1.1/title"},
+				MappingUtils.splitAndExpandIriPrefixes("dc:subject;dc:title", ";").toArray()
+				);
+    }
 
 	void testExpandIriPrefixHelper(String input, String expected, Map<String, String> prefixMap) {
 		testExpandIriPrefixHelper(input, expected, prefixMap, "");
@@ -88,6 +100,36 @@ class MappingUtilsTest {
 //				"split 'abc' with empty separator '' should throw exception");
 		assertArrayEquals(new String[]{"abc"},
 				MappingUtils.split("abc", "").toArray(),
+				"split 'abc' on empty string '' should return input");
+	}
+	
+	@Test
+	void testSplitAndTrim() {
+		assertArrayEquals(new String[]{"abc"},
+				MappingUtils.splitAndTrim("abc", ";").toArray(),
+				"split with single entry 'abc'");
+		assertArrayEquals(new String[]{"a", "b"},
+				MappingUtils.splitAndTrim("a;b", ";").toArray(),
+				"split with 2 entries 'a;b'");
+		assertArrayEquals(new String[]{"a", "", "b"},
+				MappingUtils.splitAndTrim("a;;b", ";").toArray(),
+				"split with empty parts 'a;;b'");
+		assertArrayEquals(new String[]{"a", "", "b"},
+				MappingUtils.splitAndTrim("a ;; b", ";").toArray(),
+				"split with empty parts and spaces 'a ;; b'");
+
+		//testing null values
+		assertArrayEquals(new String[]{},
+				MappingUtils.splitAndTrim(null, ";").toArray(),
+				"splitting null should return null");
+		assertArrayEquals(new String[]{"abc"},
+				MappingUtils.splitAndTrim("abc", null).toArray(),
+				"split 'abc' on null should return input");
+//		assertThrows(Exception.class,
+//				() -> MappingUtils.split("abc", ""),
+//				"split 'abc' with empty separator '' should throw exception");
+		assertArrayEquals(new String[]{"abc"},
+				MappingUtils.splitAndTrim("abc", "").toArray(),
 				"split 'abc' on empty string '' should return input");
 	}
 	
@@ -128,10 +170,33 @@ class MappingUtilsTest {
 	    String result = (String)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#expandPrefix", arguments);
 	    assertEquals("http://purl.org/dc/elements/1.1/subject", result);
 	    
+	    // check function expandPrefixes
 	    arguments = new Arguments()
 	    		.add("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#p_array", "dc:subject");
 	    List<String>resultList = (List<String>)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#expandPrefixes", arguments);
 	    assertEquals(Arrays.asList("http://purl.org/dc/elements/1.1/subject"), resultList);
+	    
+	    // check function split
+	    arguments = new Arguments()
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter", "a;b;c")
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_string_sep", ";");
+	    //assertEquals("('http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter' -> 'a;b,c')('http://users.ugent.be/~bjdmeest/function/grel.ttl#param_string_sep' -> ';,')",arguments.toString());
+	    resultList = (List<String>)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#split", arguments);
+	    assertEquals(Arrays.asList("a", "b", "c"), resultList);
+
+	    // check function splitAndTrim
+	    arguments = new Arguments()
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter", " a; b ;c")
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_string_sep", ";");
+	    resultList = (List<String>)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#splitAndTrim", arguments);
+	    assertEquals(Arrays.asList("a", "b", "c"), resultList);
+	    
+	    // check function splitAndExpandPrefixes
+	    arguments = new Arguments()
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter", "dc:subject; dc:title")
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_string_sep", ";");
+	    resultList = (List<String>)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#splitAndExpandPrefixes", arguments);
+	    assertEquals(Arrays.asList("http://purl.org/dc/elements/1.1/subject", "http://purl.org/dc/elements/1.1/title"), resultList);
 	}
 	
 	@Test
