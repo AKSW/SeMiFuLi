@@ -55,15 +55,21 @@ class MappingUtilsTest {
 		assertEquals("http://purl.org/dc/elements/1.1/subject", MappingUtils.expandIriPrefix("dc:subject"));
 	}
 	
-	void testSplitAndExpandIriPrefixes() throws IOException {
-		assertEquals(
-				"http://purl.org/dc/elements/1.1/subject",
-				MappingUtils.splitAndExpandIriPrefixes("dc:subject", ";")
+	@Test
+	void testSplitAndExpandIriPrefixes() throws IOException {		
+		assertArrayEquals(
+				new String[] {"http://purl.org/dc/elements/1.1/subject"},
+				MappingUtils.splitAndExpandIriPrefixes("dc:subject", ";").toArray()
 				);
 		
 		assertArrayEquals(
 				new String[] {"http://purl.org/dc/elements/1.1/subject", "http://purl.org/dc/elements/1.1/title"},
 				MappingUtils.splitAndExpandIriPrefixes("dc:subject;dc:title", ";").toArray()
+				);
+		
+		assertArrayEquals(
+				new String[] {},
+				MappingUtils.splitAndExpandIriPrefixes(null, ";").toArray()
 				);
     }
 
