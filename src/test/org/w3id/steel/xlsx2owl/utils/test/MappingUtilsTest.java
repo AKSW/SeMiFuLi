@@ -1,6 +1,6 @@
 package org.w3id.steel.xlsx2owl.utils.test;
 
-import static org.junit.Assert.fail;
+//import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertLinesMatch;
@@ -156,7 +156,7 @@ class MappingUtilsTest {
 				+ ", rdfs=http://www.w3.org/2000/01/rdf-schema#"
 				+ ", rdf=http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 				+ "}",
-				MappingUtils.readInPrefixCsv(new FileReader("tests/resources/prefixes.csv")).toString(),
+				MappingUtils.readInPrefixCsv(new FileReader("src/test/resources/prefixes.csv")).toString(),
 				"testing csv read in from File with multiple separators");
 	}
 	
