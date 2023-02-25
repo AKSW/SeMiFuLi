@@ -152,6 +152,31 @@ sfunc:splitAndExpandPrefixes
     fno:returns         ( grel:output_array ) ;
     .
 
+# Conversion helpers from InfAI
+
+sfunc:epochToIso8601_func
+    a                   fno:Function ;
+    fno:name            "epochToIso8601" ;
+    dcterms:description "Convert a Unix epoch to ISO8601 format" ;
+    fno:expects         ( grel:valueParam ) ; # integer
+    fno:returns         ( grel:valueParam ) . # String of type xsd:DateTime
+
+sfunc:epochToIso8601Mapping
+    a                    fno:Mapping ;
+    fno:function         sfunc:epochToIso8601_func ;
+    fno:implementation   sfunc:epochToIso8601 ;
+# TODO if not clear
+    fno:parameterMapping [ ] ;
+# TODO if not clear
+    fno:returnMapping    [ ] ;
+    fno:methodMapping    [ a fnom:StringMethodMapping ;
+                           fnom:method-name "epochToIso8601" ] . # ??
+
+sfunc:epochToIso8601
+    a                  fnoi:JavaClass ;
+    doap:download-page "xlsx2owl-utils.jar" ; # correct?
+    fnoi:class-name    "org.w3id.copper.conversionHelpers.Utils" .
+
 #####################
 # Function Mappings #
 #####################
