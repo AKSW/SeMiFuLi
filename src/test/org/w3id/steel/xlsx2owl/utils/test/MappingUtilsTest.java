@@ -214,7 +214,7 @@ class MappingUtilsTest {
 	    
 	    // check function epochToIso8601
 	    arguments = new Arguments()
-	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter", 1673359547L);
+	    		.add("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#p_long_i", (Long)1673359547L);
 	    result = (String)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#epochToIso8601", arguments);
 		assertEquals("2023-01-10T15:05:47Z", result);
 	}

@@ -39,12 +39,12 @@ grel:output_array
     rdfs:label    "array" ;
     fno:predicate grel:o_array ;
     fno:type      rdf:List .
-grel:param_int_i
+sfunc:param_long_i
     a             fno:Parameter ;
     fno:name      "d1" ;
     rdfs:label    "d1" ;
-    fno:predicate grel:p_int_i ;
-    fno:type      xsd:int ;
+    fno:predicate sfunc:p_long_i ;
+    fno:type      xsd:long ;
     fno:required  "true"^^xsd:boolean .
 sfunc:param_array
     a             fno:Parameter ;
@@ -165,7 +165,7 @@ sfunc:epochToIso8601
     fno:name            "epochToIso8601" ;
     dcterms:description "Convert a Unix epoch to ISO8601 format" ;
     #fno:expects         ( grel:valueParam ) ; # integer
-    fno:expects         ( grel:param_int_i ) ;
+    fno:expects         ( sfunc:param_long_i ) ;
     #fno:returns         ( grel:valueParam ) . # String of type xsd:DateTime
     fno:returns        grel:output_datetime .
 
