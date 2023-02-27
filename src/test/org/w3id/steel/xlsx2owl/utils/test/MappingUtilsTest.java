@@ -18,6 +18,7 @@ import java.util.logging.LogManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.jupiter.api.Test;
+import org.w3id.copper.conversionHelpers.Utils;
 import org.w3id.steel.xlsx2owl.utils.MappingUtils;
 
 import be.ugent.idlab.knows.functions.agent.Agent;
@@ -203,6 +204,12 @@ class MappingUtilsTest {
 	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_string_sep", ";");
 	    resultList = (List<String>)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#splitAndExpandPrefixes", arguments);
 	    assertEquals(Arrays.asList("http://purl.org/dc/elements/1.1/subject", "http://purl.org/dc/elements/1.1/title"), resultList);
+	    
+	    // check function epochToIso8601
+	    arguments = new Arguments()
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter", 1673359547L);
+	    result = (String)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#epochToIso8601_func", arguments);
+		assertEquals("2023-01-10T15:05:47Z", result);
 	}
 	
 	@Test
