@@ -7,15 +7,19 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -273,6 +277,23 @@ public class MappingUtils {
 	 */
 	public static List<String> splitAndExpandIriPrefixes(String iris, String sep) throws IOException {
 		return expandIriPrefixes( splitAndTrim(iris, sep));
+	}
+	
+	/**
+	 * Convertes a unix epoch to an ISOString, usually seen in xsd:DateTime
+	 * @param epoch
+	 * @return
+	 */
+	public static String epochToIso8601(long epoch) {
+		logger.debug("epoch:", epoch);
+		if(epoch <= 167335954700L) // < 1975
+			epoch *= 1000;
+		String format = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+		SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.getDefault());
+		sdf.setTimeZone(TimeZone.getDefault());
+		String toReturn = sdf.format(new Date(epoch));
+		logger.debug("converted to:", toReturn);
+		return toReturn;
 	}
 	
 }

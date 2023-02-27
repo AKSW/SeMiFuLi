@@ -39,7 +39,13 @@ grel:output_array
     rdfs:label    "array" ;
     fno:predicate grel:o_array ;
     fno:type      rdf:List .
-
+grel:param_int_i
+    a             fno:Parameter ;
+    fno:name      "d1" ;
+    rdfs:label    "d1" ;
+    fno:predicate grel:p_int_i ;
+    fno:type      xsd:int ;
+    fno:required  "true"^^xsd:boolean .
 sfunc:param_array
     a             fno:Parameter ;
     fno:name      "array" ;
@@ -154,28 +160,14 @@ sfunc:splitAndExpandPrefixes
 
 # Conversion helpers from InfAI
 
-sfunc:epochToIso8601_func
+sfunc:epochToIso8601
     a                   fno:Function ;
     fno:name            "epochToIso8601" ;
     dcterms:description "Convert a Unix epoch to ISO8601 format" ;
-    fno:expects         ( grel:valueParam ) ; # integer
-    fno:returns         ( grel:valueParam ) . # String of type xsd:DateTime
-
-sfunc:epochToIso8601Mapping
-    a                    fno:Mapping ;
-    fno:function         sfunc:epochToIso8601_func ;
-    fno:implementation   sfunc:epochToIso8601 ;
-# TODO if not clear
-    fno:parameterMapping [ ] ;
-# TODO if not clear
-    fno:returnMapping    [ ] ;
-    fno:methodMapping    [ a fnom:StringMethodMapping ;
-                           fnom:method-name "epochToIso8601" ] . # ??
-
-sfunc:epochToIso8601
-    a                  fnoi:JavaClass ;
-    doap:download-page "xlsx2owl-utils.jar" ; # correct?
-    fnoi:class-name    "org.w3id.copper.conversionHelpers.Utils" .
+    #fno:expects         ( grel:valueParam ) ; # integer
+    fno:expects         ( grel:param_int_i ) ;
+    #fno:returns         ( grel:valueParam ) . # String of type xsd:DateTime
+    fno:returns        grel:output_datetime .
 
 #####################
 # Function Mappings #
@@ -206,4 +198,13 @@ sfunc:splitAndExpandPrefixesMapping
     fno:returnMapping    [ ] ;
     fno:methodMapping    [ a                fnom:StringMethodMapping ;
                            fnom:method-name "splitAndExpandIriPrefixes" ] .
+
+sfunc:epochToIso8601Mapping
+    a                    fno:Mapping ;
+    fno:function         sfunc:epochToIso8601 ;
+    fno:implementation   sfunc:functionsImpl ;
+    fno:parameterMapping [ ] ;
+    fno:returnMapping    [ ] ;
+    fno:methodMapping    [ a fnom:StringMethodMapping ;
+                           fnom:method-name "epochToIso8601" ] .
                            

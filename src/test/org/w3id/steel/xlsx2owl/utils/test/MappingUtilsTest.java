@@ -18,7 +18,6 @@ import java.util.logging.LogManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.jupiter.api.Test;
-import org.w3id.copper.conversionHelpers.Utils;
 import org.w3id.steel.xlsx2owl.utils.MappingUtils;
 
 import be.ugent.idlab.knows.functions.agent.Agent;
@@ -162,6 +161,14 @@ class MappingUtilsTest {
 	}
 	
 	@Test
+	void testEpochToIso8601() throws IOException {
+
+		long epoch = 1673359547L;
+		assertEquals("2023-01-10T15:05:47Z", MappingUtils.epochToIso8601(epoch));
+		assertEquals("2023-01-10T15:05:47Z", MappingUtils.epochToIso8601(epoch * 1000));
+	}
+	
+	@Test
 	void testFnoInvocation() throws Exception {
 		// see https://github.com/FnOio/function-agent-java#example
 
@@ -208,7 +215,7 @@ class MappingUtilsTest {
 	    // check function epochToIso8601
 	    arguments = new Arguments()
 	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter", 1673359547L);
-	    result = (String)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#epochToIso8601_func", arguments);
+	    result = (String)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#epochToIso8601", arguments);
 		assertEquals("2023-01-10T15:05:47Z", result);
 	}
 	
