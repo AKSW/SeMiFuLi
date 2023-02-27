@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.logging.LogManager;
 
 import org.apache.logging.log4j.Level;
@@ -161,6 +162,18 @@ class MappingUtilsTest {
 	}
 	
 	@Test
+	void testEpochToIso8601() throws IOException {
+		long epoch = 1673359547L;
+		
+		//set default time zone used in test to get independent of runtime
+		TimeZone.setDefault(TimeZone.getTimeZone("Europe/Berlin"));
+		assertEquals("Europe/Berlin",TimeZone.getDefault().getID());
+		
+		assertEquals("2023-01-10T15:05:47Z", MappingUtils.epochToIso8601(epoch));
+		assertEquals("2023-01-10T15:05:47Z", MappingUtils.epochToIso8601(epoch * 1000));
+	}
+	
+	@Test
 	void testFnoInvocation() throws Exception {
 		// see https://github.com/FnOio/function-agent-java#example
 
@@ -203,6 +216,16 @@ class MappingUtilsTest {
 	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_string_sep", ";");
 	    resultList = (List<String>)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#splitAndExpandPrefixes", arguments);
 	    assertEquals(Arrays.asList("http://purl.org/dc/elements/1.1/subject", "http://purl.org/dc/elements/1.1/title"), resultList);
+	    
+	    // check function epochToIso8601
+        // set default time zone used in test to get independent of runtime
+	  	TimeZone.setDefault(TimeZone.getTimeZone("Europe/Berlin"));
+	  	assertEquals("Europe/Berlin",TimeZone.getDefault().getID());
+	    
+	    arguments = new Arguments()
+	    		.add("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#p_long_i", (Long)1673359547L);
+	    result = (String)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#epochToIso8601", arguments);
+		assertEquals("2023-01-10T15:05:47Z", result);
 	}
 	
 	@Test

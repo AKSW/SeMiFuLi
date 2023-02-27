@@ -39,7 +39,13 @@ grel:output_array
     rdfs:label    "array" ;
     fno:predicate grel:o_array ;
     fno:type      rdf:List .
-
+sfunc:param_long_i
+    a             fno:Parameter ;
+    fno:name      "d1" ;
+    rdfs:label    "d1" ;
+    fno:predicate sfunc:p_long_i ;
+    fno:type      xsd:long ;
+    fno:required  "true"^^xsd:boolean .
 sfunc:param_array
     a             fno:Parameter ;
     fno:name      "array" ;
@@ -152,6 +158,17 @@ sfunc:splitAndExpandPrefixes
     fno:returns         ( grel:output_array ) ;
     .
 
+# Conversion helpers from InfAI
+
+sfunc:epochToIso8601
+    a                   fno:Function ;
+    fno:name            "epochToIso8601" ;
+    dcterms:description "Convert a Unix epoch to ISO8601 format" ;
+    #fno:expects         ( grel:valueParam ) ; # integer
+    fno:expects         ( sfunc:param_long_i ) ;
+    #fno:returns         ( grel:valueParam ) . # String of type xsd:DateTime
+    fno:returns        grel:output_datetime .
+
 #####################
 # Function Mappings #
 #####################
@@ -181,4 +198,13 @@ sfunc:splitAndExpandPrefixesMapping
     fno:returnMapping    [ ] ;
     fno:methodMapping    [ a                fnom:StringMethodMapping ;
                            fnom:method-name "splitAndExpandIriPrefixes" ] .
+
+sfunc:epochToIso8601Mapping
+    a                    fno:Mapping ;
+    fno:function         sfunc:epochToIso8601 ;
+    fno:implementation   sfunc:functionsImpl ;
+    fno:parameterMapping [ ] ;
+    fno:returnMapping    [ ] ;
+    fno:methodMapping    [ a fnom:StringMethodMapping ;
+                           fnom:method-name "epochToIso8601" ] .
                            
