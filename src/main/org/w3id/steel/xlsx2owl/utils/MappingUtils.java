@@ -52,18 +52,36 @@ public class MappingUtils {
 	 */
 	public static String getPrefixMapFilePath() {
 		
+		//logger.debug("searching for PrefixMapFile");
 		// get current bin's / jar's path
 		// see https://stackoverflow.com/questions/2837263/how-do-i-get-the-directory-that-the-currently-executing-jar-file-is-in
-		String binPath;
+		String binPathStr = null;
 		try {
-			binPath = MappingUtils.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
-		} catch (URISyntaxException e) {
-			logger.debug("unable to get bin path, taking working directory instead", e);
-			binPath = ".";
+			binPathStr = MappingUtils.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+			File binPath = new File(binPathStr);
+			if (binPath.isFile()) {
+				binPath = binPath.getParentFile();
+				binPathStr = binPath.getPath();
+			}
+			
+		//} catch (URISyntaxException | FileNotFoundException e) {
+		} catch (Exception e) {
+			logger.debug("unable to get bin path, skipping", e);
+			binPathStr = null;
 		}
+		
+		String homePathStr = System.getProperty("user.home");
  
 		// fill path list for testing
-		LinkedList<String> testPaths = new LinkedList<String>(Arrays.asList("prefixes.csv", "resources/prefixes.csv", binPath+"/prefixes.csv", binPath+"/resources/prefixes.csv" ));
+		LinkedList<String> testPaths = new LinkedList<String>(); //(Arrays.asList("prefixes.csv", "resources/prefixes.csv", binPathStr+"/prefixes.csv", binPathStr+"/resources/prefixes.csv" ));
+		for (String basePath: Arrays.asList(".", binPathStr, homePathStr)) {
+			if (basePath != null) {
+				testPaths.addLast(basePath + File.separator + "prefixes.csv");
+				testPaths.addLast(basePath + File.separator + "resources" + File.separator + "prefixes.csv");
+			}
+		}
+		//System.out.println("test paths: " + testPaths);
+		
 		
 		// add value from System property as second entry
 		try {
@@ -85,12 +103,17 @@ public class MappingUtils {
 		
 		// return first entry from test list where the file exists
 		for (String testPath: testPaths ) {
-			if ( new File(testPath).isFile() ) {
-				logger.debug("found iri prefix mapping file at '{}'", testPath);
-				return testPath;
+			try {
+				if ( new File(testPath).isFile() ) {
+					logger.debug("found iri prefix mapping file at '{}'", testPath);
+					return testPath;
+				}
+			} catch (Exception e) {
+				logger.debug("exception while looking for prefixes.csv", e);
 			}
 		}
 		// return last entry if no file exist
+		logger.error("found no iri prefix mapping file. Looked at '{}'", testPaths);
 		return testPaths.getLast();
 	}
 	
@@ -189,7 +212,13 @@ public class MappingUtils {
 		if (iris.size()<=0)
 			return Collections.emptyList();
 		List<String> result = new LinkedList<>();
-		Map<String, String> prefixMap = readInPrefixCsv( new FileReader(getPrefixMapFilePath() ) );
+		Map<String, String> prefixMap;
+		try {
+			prefixMap = readInPrefixCsv( new FileReader(getPrefixMapFilePath() ) );
+		} catch (FileNotFoundException e) {
+			logger.debug("Problem encountered while reading in prefix map file, skipping.", e);
+			prefixMap = new HashMap<String, String>();
+		}
 		for (String iri:iris) {
 			String expandedIri = expandIriPrefix(iri, prefixMap);
 			if (expandedIri!=null && expandedIri.trim().length()!=0)
@@ -268,6 +297,36 @@ public class MappingUtils {
 	}
 
 	/**
+     * Returns a boolean indicating whether s contains sub.
+	 * For example, "food".contains("oo") returns true whereas "food".contains("ee") returns false.
+     * This implementation is a copy of the GREL string function "contains" with additional null input handling.
+	 * 
+	 * @see https://github.com/FnOio/grel-functions-java/blob/master/src/main/java/io/fno/grel/StringFunctions.java
+     *
+     * @param s     string
+     * @param sub   substring
+     * @return      {@code true} if {@code s} contains {@code sub}.
+     */
+    public static Boolean contains(String s, String sub) {
+		if (s==null) return false;
+		else if (sub==null) return true;
+        else return s.contains(sub);
+    }
+
+	/**
+     * Returns a boolean indicating whether s not contains sub.
+     * This implementation is a shortcut for not+contains.
+     *
+     * @param s     string
+     * @param sub   substring
+     * @return      {@code true} if {@code s} not contains {@code sub}.
+     */
+    public static Boolean notContains(String s, String sub) {
+		//System.out.println("checking '"+s+"' not contains '"+sub+"'");
+		return !contains(s, sub);
+    }
+
+	/**
 	 * Splits the given iris by separator 'sep' and expands prefixes (if known) in the resulting list of iris.
 	 * A CSV file 'prefixes.csv' with known prefixes is expected.
 	 * @param iris string containing possibly multiple iris, separated by 'sep'
@@ -295,5 +354,21 @@ public class MappingUtils {
 		logger.debug("converted to:", toReturn);
 		return toReturn;
 	}
+
+	/**
+     * Logically NOT a boolean to yield another boolean.
+     * This implementation is a copy of the GREL function "not" with additional null input handling.
+	 * null returns false
+	 * 
+	 * @see https://github.com/FnOio/grel-functions-java/blob/master/src/main/java/io/fno/grel/BooleanFunctions.java
+     * @param b a boolean
+     * @return the reverted boolean
+     */
+	//TODO there is some problem with this function, the FNO invocation test fails as the b is always null.
+    // public static Boolean not(Boolean b) {
+	// 	System.out.println("negating '"+b+"'");
+	// 	if (b==null) return false;
+    //     return !b;
+    // }
 	
 }

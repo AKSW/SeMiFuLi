@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>xlsx2owl-utils</groupId>
   <artifactId>xlsx2owl-utils</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.2.1-SNAPSHOT</version>
   <name>xlsx2owl-utils</name>
   <description>utility functions for mappings described with FNO</description>
   <build>
@@ -72,7 +72,7 @@
     <dependency>
         <groupId>com.github.fnoio</groupId>
         <artifactId>function-agent-java</artifactId>
-        <version>v0.2.1</version>
+        <version>v1.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>

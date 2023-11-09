@@ -4,7 +4,11 @@ package org.w3id.steel.xlsx2owl.utils.test;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertLinesMatch;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -139,6 +143,41 @@ class MappingUtilsTest {
 				MappingUtils.splitAndTrim("abc", "").toArray(),
 				"split 'abc' on empty string '' should return input");
 	}
+
+	@Test
+	void testContains() {
+		//testing normal cases
+		assertTrue(MappingUtils.contains("abc", "b"), "'abc' should contain 'b'");	
+		assertTrue(MappingUtils.contains("abc", "a"), "'abc' should contain 'a'");
+		assertTrue(MappingUtils.contains("abc", "c"), "'abc' should contain 'c'");
+		assertTrue(MappingUtils.contains("abc", ""), "'abc' should contain empty string ''");
+		assertFalse(MappingUtils.contains("abc", "d"), "'abc' should not contain 'd'");
+
+		//testing null values
+		assertFalse(MappingUtils.contains(null, "a"), "null string should contain nothing");
+		assertTrue(MappingUtils.contains("abc", null), "every string should contain null");	
+	}
+
+	@Test
+	void testNotContains() {
+		//testing normal cases
+		assertFalse(MappingUtils.notContains("abc", "b"), "'abc' should not notContain 'b'");	
+		assertFalse(MappingUtils.notContains("abc", "a"), "'abc' should not notContain 'a'");
+		assertFalse(MappingUtils.notContains("abc", "c"), "'abc' should not notContain 'c'");
+		assertFalse(MappingUtils.notContains("abc", ""), "'abc' should not notContain empty string ''");
+		assertTrue(MappingUtils.notContains("abc", "d"), "'abc' should notContain 'd'");
+
+		//testing null values
+		assertTrue(MappingUtils.notContains(null, "a"), "null string should not notContain nothing");
+		assertFalse(MappingUtils.notContains("abc", null), "every string should not notContain null");	
+	}
+
+	// @Test
+	// void testNot() {
+	// 	assertFalse(MappingUtils.not(true), "not true should be false");
+	// 	assertTrue(MappingUtils.not(false), "not false should be true");
+	// 	assertFalse(MappingUtils.not(null), "not 'null' should be false");
+	// }
 	
 	@Test
 	void testReadInPrefixCsv() throws IOException {
@@ -181,7 +220,7 @@ class MappingUtilsTest {
 		//org.apache.logging.log4j.LogManager.getRootLogger();
 		//Configurator.setAllLevels(org.apache.logging.log4j.LogManager.getRootLogger().getName(), Level.getLevel("Debug"));
 		
-		Agent agent = AgentFactory.createFromFnO("resources/functions_xlsx2owl.ttl");
+		Agent agent = AgentFactory.createFromFnO("resources/functions_xlsx2owl.ttl", "resources/grelTypes.ttl");
 		// prepare the parameters for the function
 	    Arguments arguments = new Arguments()
 	        .add("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter", "dc:subject");
@@ -216,6 +255,27 @@ class MappingUtilsTest {
 	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_string_sep", ";");
 	    resultList = (List<String>)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#splitAndExpandPrefixes", arguments);
 	    assertEquals(Arrays.asList("http://purl.org/dc/elements/1.1/subject", "http://purl.org/dc/elements/1.1/title"), resultList);
+
+		//check function contains
+		arguments = new Arguments()
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter", "abc")
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_string_sep", "b");
+		Boolean resultBool = (Boolean)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#contains", arguments);
+		assertTrue(resultBool);
+
+		//check function notContains
+		arguments = new Arguments()
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#valueParameter", "abc")
+	    		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#p_string_sep", "b");
+		resultBool = (Boolean)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#notContains", arguments);
+		assertFalse(resultBool);
+
+		//check function not
+		// arguments = new Arguments()
+	    // 		.add("http://users.ugent.be/~bjdmeest/function/grel.ttl#param_b", Boolean.FALSE);
+		// resultBool = (Boolean)agent.execute("http://w3id.org/steel/xlsx2owl-utils/functions.ttl#boolean_not", arguments);
+		// //resultBool = (Boolean)agent.execute("http://users.ugent.be/~bjdmeest/function/grel.ttl#boolean_not", arguments);
+		// assertTrue(resultBool, "not(false) should be true");
 	    
 	    // check function epochToIso8601
         // set default time zone used in test to get independent of runtime
@@ -231,10 +291,10 @@ class MappingUtilsTest {
 	@Test
 	void testGetPrefixMapFilePath() {
 		System.clearProperty(MappingUtils.IRI_PREFIX_MAP_FILE_PROPERTY);
-		assertEquals("resources/prefixes.csv", MappingUtils.getPrefixMapFilePath() );
+		assertEquals("." + File.separator + "resources" + File.separator + "prefixes.csv", MappingUtils.getPrefixMapFilePath() );
 		
-		System.setProperty(MappingUtils.IRI_PREFIX_MAP_FILE_PROPERTY, "resources/functions_xlsx2owl.ttl");
-		assertEquals("resources/functions_xlsx2owl.ttl", MappingUtils.getPrefixMapFilePath() );
+		System.setProperty(MappingUtils.IRI_PREFIX_MAP_FILE_PROPERTY, "resources" + File.separator + "functions_xlsx2owl.ttl");
+		assertEquals("resources" + File.separator + "functions_xlsx2owl.ttl", MappingUtils.getPrefixMapFilePath() );
 		System.clearProperty(MappingUtils.IRI_PREFIX_MAP_FILE_PROPERTY);
 		
 		//difficult to test with changed working directory
