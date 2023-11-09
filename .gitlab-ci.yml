@@ -60,12 +60,12 @@ cache:
       - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 # Verify merge requests using JDK8
-verify:jdk8:
+verify:jdk21:
   extends:
     - .verify
 
 # create jar package artifacts
-package:jdk8:
+package:jdk21:
   stage: deploy
   artifacts:
     paths:
